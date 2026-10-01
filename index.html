@@ -3,135 +3,231 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#f6f7f8">
+<meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="タイマー">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="2人対戦タイマー">
 <link rel="manifest" href="manifest.json">
-<title>タイマー</title>
+<title>2人対戦タイマー</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:#f6f7f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
-body{padding:max(18px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom))}
-.app{width:min(100%,520px);margin:0 auto;min-height:calc(100vh - max(18px,env(safe-area-inset-top)) - max(24px,env(safe-area-inset-bottom)));display:flex;flex-direction:column}
-header{text-align:center;padding:8px 0 14px}
-.title{font-size:20px;font-weight:700}
-.sub{font-size:13px;color:#71808d;margin-top:4px}
-.card{background:#fff;border:1px solid #e5e8eb;border-radius:28px;padding:28px 20px 24px;box-shadow:0 8px 28px rgba(0,0,0,.05)}
-.label{text-align:center;color:#71808d;font-size:14px;margin-bottom:8px}
-.time{font-variant-numeric:tabular-nums;text-align:center;font-size:clamp(72px,22vw,112px);line-height:1;font-weight:750;letter-spacing:.02em}
-.unit{text-align:center;color:#71808d;font-size:14px;margin-top:8px}
-.setting{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:26px}
-.setting button{width:52px;height:52px;border:0;border-radius:16px;background:#eef1f3;font-size:28px;color:#17202a}
-.seconds{min-width:118px;text-align:center;font-size:22px;font-weight:700}
-.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
-.presets button{min-height:44px;border:1px solid #dfe3e6;background:#fff;border-radius:14px;font-weight:650;color:#33404b}
-.controls{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin-top:18px}
-.controls button{min-height:58px;border-radius:18px;font-size:18px;font-weight:750}
-.start{border:0;background:#167f78;color:#fff}
-.stop{border:1px solid #d5dadd;background:#fff;color:#26323b}
-.message{text-align:center;min-height:22px;margin:14px 0 0;color:#687681;font-size:13px}
-.help{text-align:center;color:#84909a;font-size:12px;margin-top:auto;padding-top:18px}
-@media(max-width:360px){.presets{grid-template-columns:repeat(2,1fr)}.time{font-size:72px}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111827;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.app{height:100%;display:flex;flex-direction:column}
+.player{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .15s ease}
+.player.top{transform:rotate(180deg)}
+.player.bottom{background:#172033}
+.player.top{background:#202938}
+.player.active{background:#0b6f68}
+.player.paused{background:#172033}
+.player.timeout{background:#8b1e2d}
+.name{font-size:18px;font-weight:700;opacity:.9;margin-bottom:10px}
+.time{font-variant-numeric:tabular-nums;font-size:clamp(76px,23vw,130px);line-height:.95;font-weight:800;letter-spacing:.02em}
+.status{font-size:13px;opacity:.75;margin-top:12px;min-height:18px}
+.config{position:absolute;bottom:12px;display:flex;align-items:center;gap:8px;opacity:.92}
+.config button{width:38px;height:34px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font-size:22px}
+.config input{width:92px;height:34px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:rgba(0,0,0,.16);color:#fff;text-align:center;font-size:17px;font-weight:700;outline:none}
+.config span{font-size:13px;opacity:.8}
+.config.disabled{opacity:.25;pointer-events:none}
+.center{height:66px;flex:0 0 66px;background:#0d1421;display:flex;align-items:center;justify-content:center;gap:10px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);z-index:5}
+.center button{height:42px;border-radius:13px;padding:0 18px;font-size:16px;font-weight:750}
+#reset{background:#fff;color:#172033;border:0}
+#sound{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
+.hint{position:absolute;top:12px;font-size:12px;opacity:.55}
+.player.top .hint{transform:rotate(180deg)}
+@media(max-width:360px){.time{font-size:70px}.name{font-size:16px}.config input{width:82px}}
 </style>
 </head>
 <body>
-<main class="app">
-<header><div class="title">カウントダウンタイマー</div><div class="sub">0秒になるとアラームが鳴ります</div></header>
-<section class="card" aria-label="タイマー">
-<div class="label">残り時間</div>
-<div id="display" class="time" aria-live="polite">00:30</div>
-<div class="unit">設定時間</div>
+<main class="app" aria-label="2人対戦タイマー">
 
-<div class="setting">
-<button id="minus" type="button" aria-label="10秒減らす">−</button>
-<div id="seconds" class="seconds">30秒</div>
-<button id="plus" type="button" aria-label="10秒増やす">＋</button>
-</div>
-
-<div class="presets">
-<button type="button" data-sec="10">10秒</button>
-<button type="button" data-sec="30">30秒</button>
-<button type="button" data-sec="60">1分</button>
-<button type="button" data-sec="180">3分</button>
-</div>
-
-<div class="controls">
-<button id="start" class="start" type="button">▶ スタート</button>
-<button id="stop" class="stop" type="button">↻ リセット</button>
-</div>
-<div id="message" class="message" aria-live="polite"></div>
+<section id="p1" class="player top paused" data-player="0">
+  <div class="hint">タップして相手へ</div>
+  <div class="name">PLAYER 1</div>
+  <div id="time0" class="time">01:00</div>
+  <div id="status0" class="status">待機中</div>
+  <div id="config0" class="config">
+    <button type="button" data-action="minus" data-player="0">−</button>
+    <input id="input0" type="number" min="1" step="1" value="60" inputmode="numeric" aria-label="PLAYER 1 設定秒数">
+    <span>秒</span>
+    <button type="button" data-action="plus" data-player="0">＋</button>
+  </div>
 </section>
-<div class="help">リセットすると設定した秒数に戻ります</div>
+
+<div class="center">
+  <button id="reset" type="button">↻ リセット</button>
+  <button id="sound" type="button">🔊 音 ON</button>
+</div>
+
+<section id="p2" class="player bottom paused" data-player="1">
+  <div class="hint">タップして相手へ</div>
+  <div class="name">PLAYER 2</div>
+  <div id="time1" class="time">01:00</div>
+  <div id="status1" class="status">待機中</div>
+  <div id="config1" class="config">
+    <button type="button" data-action="minus" data-player="1">−</button>
+    <input id="input1" type="number" min="1" step="1" value="60" inputmode="numeric" aria-label="PLAYER 2 設定秒数">
+    <span>秒</span>
+    <button type="button" data-action="plus" data-player="1">＋</button>
+  </div>
+</section>
+
 </main>
 
 <script>
 (() => {
-const display=document.getElementById('display');
-const secondsEl=document.getElementById('seconds');
-const message=document.getElementById('message');
-const start=document.getElementById('start');
-const stop=document.getElementById('stop');
-const minus=document.getElementById('minus');
-const plus=document.getElementById('plus');
-let setting=30, remaining=30, timer=null, end=0, audio=null;
+  const players = [
+    {el:document.getElementById('p1'), timeEl:document.getElementById('time0'), statusEl:document.getElementById('status0'), input:document.getElementById('input0'), config:document.getElementById('config0'), setting:60, remaining:60},
+    {el:document.getElementById('p2'), timeEl:document.getElementById('time1'), statusEl:document.getElementById('status1'), input:document.getElementById('input1'), config:document.getElementById('config1'), setting:60, remaining:60}
+  ];
+  let active = null;
+  let endAt = 0;
+  let raf = null;
+  let started = false;
+  let gameOver = false;
+  let soundOn = true;
+  let audioCtx = null;
 
-function fmt(s){
- s=Math.max(0,Math.ceil(s));
- const m=Math.floor(s/60), sec=s%60;
- return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
-}
-function render(){
- display.textContent=fmt(remaining);
- secondsEl.textContent=setting>=60 ? (setting%60===0 ? setting/60+'分' : setting+'秒') : setting+'秒';
-}
-function reset(){
- if(timer){clearInterval(timer);timer=null}
- remaining=setting; render();
-}
-function beep(){
- try{
-  const C=window.AudioContext||window.webkitAudioContext;
-  if(!C)return;
-  audio=audio||new C();
-  if(audio.state==='suspended')audio.resume();
-  const now=audio.currentTime;
-  [0,.32,.64].forEach((d)=>{
-   const o=audio.createOscillator(),g=audio.createGain();
-   o.type='sine';o.frequency.value=880;
-   g.gain.setValueAtTime(.001,now+d);
-   g.gain.exponentialRampToValueAtTime(.35,now+d+.02);
-   g.gain.exponentialRampToValueAtTime(.001,now+d+.24);
-   o.connect(g).connect(audio.destination);o.start(now+d);o.stop(now+d+.26);
-  });
- }catch(e){}
-}
-function setTime(s){
- setting=Math.max(1,Math.min(86400,Math.round(s)));
- reset(); message.textContent=setting+'秒に設定しました';
-}
-function run(){
- if(timer)return;
- if(remaining<=0)remaining=setting;
- if(audio&&audio.state==='suspended')audio.resume();
- end=Date.now()+remaining*1000;
- message.textContent='カウント中…';
- timer=setInterval(()=>{
-  remaining=Math.max(0,(end-Date.now())/1000); render();
-  if(remaining<=0){
-   clearInterval(timer);timer=null;remaining=0;render();
-   message.textContent='時間になりました！';
-   beep();
+  function fmt(sec) {
+    sec = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
- },50);
-}
-minus.addEventListener('click',()=>setTime(setting-10));
-plus.addEventListener('click',()=>setTime(setting+10));
-document.querySelectorAll('[data-sec]').forEach(b=>b.addEventListener('click',()=>setTime(Number(b.dataset.sec))));
-start.addEventListener('click',run);
-stop.addEventListener('click',()=>{reset();message.textContent=setting+'秒に戻しました'});
-render();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+  function render() {
+    players.forEach((p, i) => {
+      p.timeEl.textContent = fmt(p.remaining);
+      p.el.classList.toggle('active', active === i && !gameOver);
+      p.el.classList.toggle('paused', active !== i || gameOver);
+      p.el.classList.toggle('timeout', gameOver && p.remaining <= 0);
+      if (gameOver && p.remaining <= 0) p.statusEl.textContent = '時間切れ';
+      else if (active === i) p.statusEl.textContent = 'カウント中';
+      else if (started) p.statusEl.textContent = '待機中';
+      else p.statusEl.textContent = 'タップでスタート';
+      p.input.value = Math.max(1, Math.round(p.setting));
+    });
+    players.forEach(p => p.config.classList.toggle('disabled', started));
+  }
+
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function beep() {
+    if (!soundOn) return;
+    try {
+      ensureAudio();
+      const now = audioCtx.currentTime;
+      [0, .22, .44].forEach((offset, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = idx === 2 ? 880 : 660;
+        gain.gain.setValueAtTime(.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(.28, now + offset + .015);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + offset + .18);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + .2);
+      });
+    } catch(e) {}
+  }
+
+  function tick() {
+    if (active === null || gameOver) return;
+    const p = players[active];
+    p.remaining = Math.max(0, (endAt - Date.now()) / 1000);
+    if (p.remaining <= 0) {
+      p.remaining = 0;
+      gameOver = true;
+      active = null;
+      beep();
+      render();
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      return;
+    }
+    render();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function switchTo(next) {
+    if (gameOver) return;
+    ensureAudio();
+    if (active !== null) {
+      const current = players[active];
+      // タップした側はターン終了時に、設定した秒数へ戻す。
+      // したがって次に自分の番が来たときは、毎回フルの設定時間から開始する。
+      current.remaining = current.setting;
+    }
+    active = next;
+    // 相手側も設定した秒数からスタートする。
+    players[next].remaining = players[next].setting;
+    endAt = Date.now() + players[next].remaining * 1000;
+    started = true;
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(tick);
+    render();
+  }
+
+  function tapPlayer(i) {
+    if (gameOver) return;
+    if (!started) {
+      switchTo(i);
+      return;
+    }
+    // 対戦中は「現在カウントしている側」だけがタップでき、
+    // タップすると相手のカウントへ切り替わる。
+    if (active === i) switchTo(1 - i);
+  }
+
+  players.forEach((p, i) => {
+    p.el.addEventListener('click', (e) => {
+      if (e.target.closest('.config')) return;
+      tapPlayer(i);
+    });
+    p.input.addEventListener('change', () => {
+      if (started) return;
+      let v = parseInt(p.input.value, 10);
+      if (!Number.isFinite(v) || v < 1) v = 1;
+      p.setting = v;
+      p.remaining = v;
+      render();
+    });
+    p.input.addEventListener('click', e => e.stopPropagation());
+  });
+
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (started) return;
+      const i = Number(btn.dataset.player);
+      players[i].setting = Math.max(1, players[i].setting + (btn.dataset.action === 'plus' ? 1 : -1));
+      players[i].remaining = players[i].setting;
+      render();
+      players[i].input.focus();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    active = null;
+    started = false;
+    gameOver = false;
+    players.forEach(p => { p.remaining = p.setting; });
+    render();
+  });
+
+  document.getElementById('sound').addEventListener('click', () => {
+    soundOn = !soundOn;
+    document.getElementById('sound').textContent = soundOn ? '🔊 音 ON' : '🔇 音 OFF';
+    if (soundOn) ensureAudio();
+  });
+
+  render();
 })();
 </script>
 </body>

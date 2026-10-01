@@ -1,10 +1,10 @@
 {
-  "name": "カウントダウンタイマー",
-  "short_name": "タイマー",
+  "name": "2人対戦タイマー",
+  "short_name": "対戦タイマー",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f7f8",
-  "theme_color": "#f6f7f8",
+  "background_color": "#111827",
+  "theme_color": "#111827",
   "lang": "ja",
-  "icons": []
+  "description": "iPhoneで使える2人対戦用カウントダウンタイマー"
 }
